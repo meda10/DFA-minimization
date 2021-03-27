@@ -38,8 +38,7 @@ main = do
 --  (test, t) <- print_s "aaaee"
 --  (print_s input) >>= print
 
-  ini <- fin_parse <$> readFile "app/input.in"
---  ini <- parseInput <$> readFile "app/input.in"
+  ini <- parse <$> readFile "app/input.in"
   mapM_ print $ ini
 
 --  (ini, t) <- parseInput <$> readFile "app/input.in"

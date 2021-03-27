@@ -4,38 +4,16 @@ import Control.Applicative
 import Control.Arrow
 import Control.Monad
 import Data.List
-import Text.Read (readPrec)
 import Text.ParserCombinators.ReadP
-import Text.ParserCombinators.ReadPrec (readPrec_to_P, minPrec)
 
 import Types
 
---seznam vsech stavu
---abeceda
---poćatecńi stav
---seznam koncovych stavu
---pravidlo 1
---pravidlo n
 
+parse :: ReadS Finite_automaton
+parse = readP_to_S parse_finite_automaton
 
---parse :: ReadP Finite_automaton
---parse = do
---    states <- null
---    alphabet <- alphabet_parser
---    start_state <- null
---    accept_states <- null
---    transition_function <- null
---    return (Finite_automaton states alphabet transition_function start_state accept_states)
-
-
-fin_parse :: ReadS Finite_automaton
-fin_parse = readP_to_S parser
-
---parseRead :: Read a => ReadP a
---parseRead = readPrec_to_P readPrec minPrec
-
-parser :: ReadP Finite_automaton
-parser = Finite_automaton
+parse_finite_automaton :: ReadP Finite_automaton
+parse_finite_automaton = Finite_automaton
   <$> states_parser <* eol
   <*> alphabet_parser <* eol
   <*> start_state_parser <* eol
@@ -94,25 +72,8 @@ transition_parser = Transition
   <*> alphabet_symbol_parse <* string ","
   <*> state_parse <* skipSpaces
 
+-------------------------------------------------------------
 
--- Parses the starting symbol.
---startingSymbolParser :: Parser Symbol
---startingSymbolParser = oneOf nonterminalSymbols
-
-
--- Parses a list of production rules.
---rulesParser :: Parser Rules
---rulesParser = endBy ruleParser newline
-
--- Parses single production rules.
---ruleParser :: Parser Rule
---ruleParser = (,)
--- <$> oneOf nonterminalSymbols <* string "->"
--- <*> ( count 1 (char epsSymbol)
---   <|> many1 (oneOf $ nonterminalSymbols ++ terminalSymbols) )
-
-
---
 --input_parse :: [String] -> IO Finite_automaton
 --input_parse input = do
 --

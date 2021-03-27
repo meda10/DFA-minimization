@@ -19,28 +19,23 @@ data Finite_automaton = Finite_automaton {
   start_state :: State,
   accept_states :: States,
   transition_function :: [Transition]
-} deriving (Show, Eq)
-
-
-
+} deriving (Eq)
 
 --instance Show Finite_automaton where
 --   show (Finite_automaton)
 
 
 instance Show Transition where
-  show (Transition source destination symbol) = 
-    "("++show source++" x "++show symbol++" -> "++show destination++")"
+  show (Transition source symbol destination) = 
+    "("++show source++","++show symbol++","++show destination++")\n    "
 
---instance Show Finite_automaton where
---  show (Finite_automaton states alphabet transition_function start_state accept_states) =     
---        "states:\n" ++ show states ++ "\n" ++
---        "symbols:\n" ++ show alphabet ++ "\n" ++
---        "trans:\n" ++ show transition_function ++ "\n" ++
---        "init:\n" ++ show start_state ++ "\n" ++
---        "final:\n" ++ show accept_states ++ "\n"
-
-
+instance Show Finite_automaton where
+  show (Finite_automaton states alphabet start_state accept_states transition_function) =     
+        "S = " ++ show states ++ "\n" ++
+        "Σ = " ++ show alphabet ++ "\n" ++
+        "S0 = " ++ show start_state ++ "\n" ++
+        "F = " ++ show accept_states ++ "\n" ++
+        "δ = " ++ show transition_function ++ "\n"
 
 
 
