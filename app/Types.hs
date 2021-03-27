@@ -27,7 +27,7 @@ data Finite_automaton = Finite_automaton {
 
 instance Show Transition where
   show (Transition source symbol destination) = 
-    "("++show source++","++show symbol++","++show destination++")\n    "
+    "("++show source++","++show symbol++","++show destination++")\n"
 
 instance Show Finite_automaton where
   show (Finite_automaton states alphabet start_state accept_states transition_function) =     

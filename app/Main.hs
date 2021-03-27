@@ -39,14 +39,18 @@ main = do
 --  (print_s input) >>= print
 
   ini <- parse <$> readFile "app/input.in"
-  mapM_ print $ ini
+  let is_valid = validate_automaton_a ini
+  print (dynTypeRep (toDyn ini))
+  print (dynTypeRep (toDyn is_valid))
+  putStrLn "------------------"
+--  print ini
+  print is_valid
+
 
 --  (ini, t) <- parseInput <$> readFile "app/input.in"
 --  mapM_ print $ ini
 --  mapM_ print $ t
 
---  print test
-  putStrLn "Exit"
 --  loadTemplateFile input
   --  run_parser input
 
