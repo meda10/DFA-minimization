@@ -1,5 +1,5 @@
 module Types where
-  
+
 type State = String
 type Symbol = Char
 
@@ -12,7 +12,6 @@ data Transition = Transition {
   destination :: State
 } deriving (Eq)
 
-
 data Finite_automaton = Finite_automaton {
   states :: States,
   alphabet :: Alphabet,
@@ -21,21 +20,17 @@ data Finite_automaton = Finite_automaton {
   transition_function :: [Transition]
 } deriving (Eq)
 
---instance Show Finite_automaton where
---   show (Finite_automaton)
-
-
 instance Show Transition where
-  show (Transition source symbol destination) = 
-    "("++show source++","++show symbol++","++show destination++")\n"
+  show (Transition source_t symbol_t destination_t) =
+    "("++show source_t++","++show symbol_t++","++show destination_t++")\n"
 
 instance Show Finite_automaton where
-  show (Finite_automaton states alphabet start_state accept_states transition_function) =     
-        "S = " ++ show states ++ "\n" ++
-        "Σ = " ++ show alphabet ++ "\n" ++
-        "S0 = " ++ show start_state ++ "\n" ++
-        "F = " ++ show accept_states ++ "\n" ++
-        "δ = " ++ show transition_function ++ "\n"
+  show (Finite_automaton states_a alphabet_a start_state_a accept_states_a transition_function_a) =
+        "S = " ++ show states_a ++ "\n" ++
+        "Σ = " ++ show alphabet_a ++ "\n" ++
+        "S0 = " ++ show start_state_a ++ "\n" ++
+        "F = " ++ show accept_states_a ++ "\n" ++
+        "δ = " ++ show transition_function_a ++ "\n"
 
 
 
@@ -47,15 +42,15 @@ instance Show Finite_automaton where
 --    [intercalate "," $ map (: []) terminals] ++
 --    [[startingSymbol]] ++
 --    map (\(l, r) -> [l] ++ "->" ++ r) rules
---    
+--
 --instance Show Automata where
 --    -- "AUTOMATA whith alphabet " ++ show e ++ ":\n" ++ header for alphabet output
 --    show (A q e d q0 f) = displayListInline displayState q ++ "
---    \n" 
---        ++ displayState q0 ++ "\n" 
---        ++ displayListInline displayState f  ++ 
---        if not $ null d 
---            then "\n" ++ displayListNewline show d 
+--    \n"
+--        ++ displayState q0 ++ "\n"
+--        ++ displayListInline displayState f  ++
+--        if not $ null d
+--            then "\n" ++ displayListNewline show d
 --            else ""
---            
---displayListInline func = intercalate "," . map func                
+--
+--displayListInline func = intercalate "," . map func

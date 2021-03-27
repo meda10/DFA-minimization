@@ -101,4 +101,3 @@ validate_automaton_a automaton_a@(Finite_automaton states_a alphabet_a start_sta
       sub_sequence accept_states_a states_a &&
       all_unique_elements transition_function_a &&
       validate_transitions automaton_a
-
