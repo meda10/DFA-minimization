@@ -32,25 +32,10 @@ instance Show Finite_automaton where
         "F = " ++ show accept_states_a ++ "\n" ++
         "δ = " ++ show transition_function_a ++ "\n"
 
+data AllErrors 
+      = Invalid_file_format
+      | Invalid_arguments
 
-
---intercalate ", " ["Lorem", "ipsum", "dolor"]
---
---instance Show CFG where
---  show CFG{..} = unlines $
---    [intercalate "," $ map (: []) nonterminals] ++
---    [intercalate "," $ map (: []) terminals] ++
---    [[startingSymbol]] ++
---    map (\(l, r) -> [l] ++ "->" ++ r) rules
---
---instance Show Automata where
---    -- "AUTOMATA whith alphabet " ++ show e ++ ":\n" ++ header for alphabet output
---    show (A q e d q0 f) = displayListInline displayState q ++ "
---    \n"
---        ++ displayState q0 ++ "\n"
---        ++ displayListInline displayState f  ++
---        if not $ null d
---            then "\n" ++ displayListNewline show d
---            else ""
---
---displayListInline func = intercalate "," . map func
+instance Show AllErrors where
+    show Invalid_file_format = "Invalid input file format!"
+    show Invalid_arguments = "Invalid Arguments!"
