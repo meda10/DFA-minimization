@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: fc7f7f4125926ffb463c68c91fe5aee500d019a6b54827b85d174865a80a15a5
+-- hash: fc0a3db6e5f08002f8734c252a7b0a3c467b8c1575daf246837993e97eab6dff
 
 name:           FLP
 version:        0.1.0.0
@@ -39,6 +39,9 @@ library
 executable FLP-exe
   main-is: Main.hs
   other-modules:
+      Parse
+      Test
+      Types
       Paths_FLP
   hs-source-dirs:
       app
