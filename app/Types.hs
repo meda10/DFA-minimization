@@ -1,5 +1,7 @@
 module Types where
 
+import Data.List (intercalate)
+
 type State = String
 type Symbol = Char
 
@@ -22,17 +24,17 @@ data Finite_automaton = Finite_automaton {
 
 instance Show Transition where
   show (Transition source_t symbol_t destination_t) =
-    "("++show source_t++","++show symbol_t++","++show destination_t++")\n"
+          source_t ++ "," ++ [symbol_t] ++ "," ++ destination_t
 
 instance Show Finite_automaton where
-  show (Finite_automaton states_a alphabet_a start_state_a accept_states_a transition_function_a) =
-        "S = " ++ show states_a ++ "\n" ++
-        "Σ = " ++ show alphabet_a ++ "\n" ++
-        "S0 = " ++ show start_state_a ++ "\n" ++
-        "F = " ++ show accept_states_a ++ "\n" ++
-        "δ = " ++ show transition_function_a ++ "\n"
+  show (Finite_automaton states_a alphabet_a start_state_a accept_states_a transition_function_a) = 
+          (intercalate "," $ map (id) states_a) ++ "\n" ++ 
+          (alphabet_a) ++ "\n" ++
+          (start_state_a) ++ "\n" ++
+          (intercalate "," $ map (id) accept_states_a) ++ "\n" ++
+          (intercalate "\n" $ map (show) transition_function_a)
 
-data AllErrors 
+data AllErrors
       = Invalid_file_format
       | Invalid_arguments
 

@@ -3,22 +3,21 @@ module Main (main) where
 import System.Environment
 import System.Exit
 import System.IO
-import System.IO.Error
-import Types
-import Parse
-import Test
-
 import Data.Dynamic
+import System.IO.Error
 import Control.Exception
 import Control.Monad
 import Data.Maybe
 import Data.Char
 import Text.Printf
 
+import Types
+import Parse
+
 main :: IO ()
 main = do
   argv <- getArgs
---
+
   putStrLn "The arguments are:"
   mapM putStrLn argv
 
@@ -34,27 +33,18 @@ main = do
   print (dynTypeRep (toDyn input))
   putStrLn "------------------"
 
---  test <- loadTemplateFile "app/input.in"
---  (test, t) <- print_s "aaaee"
---  (print_s input) >>= print
-
   ini <- parse <$> readFile "app/input.in"
+--  print ini
   let is_valid = validate_automaton_a ini
   print (dynTypeRep (toDyn ini))
   print (dynTypeRep (toDyn is_valid))
   putStrLn "------------------"
 --  print ini
-  print is_valid
+--  print is_valid
+  if True then print is_valid else exit_with_error Invalid_file_format 2
 
-
---  (ini, t) <- parseInput <$> readFile "app/input.in"
---  mapM_ print $ ini
---  mapM_ print $ t
-
---  loadTemplateFile input
-  --  run_parser input
-
-
+  putStrLn "------------------"
+  action $ ini
 
 
 parse_args :: [Char] -> b -> IO (Finite_automaton -> IO (), b)
@@ -78,7 +68,9 @@ print_finite_automaton = putStr . show
 --undefined_option :: String -> IO a
 --undefined_option str = hPutStrLn stderr str >> exitFailure
 
-exit_with_error :: String -> Int -> IO a
-exit_with_error str e = hPutStrLn stderr str >> exitWith (ExitFailure e)
+exit_with_error :: Show a => a -> Int -> IO b
+exit_with_error error_msg code = hPutStrLn stderr ("ERROR: " ++ show error_msg) >> exitWith (ExitFailure code)
+--exit_with_error :: String -> Int -> IO a
+--exit_with_error str code = hPutStrLn stderr str >> exitWith (ExitFailure code)
 
 
