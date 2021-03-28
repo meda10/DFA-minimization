@@ -37,7 +37,9 @@ instance Show Finite_automaton where
 data AllErrors
       = Invalid_file_format
       | Invalid_arguments
+      | Invalid_automaton_format
 
 instance Show AllErrors where
-    show Invalid_file_format = "Invalid input file format!"
-    show Invalid_arguments = "Invalid Arguments!"
+    show Invalid_file_format = "Invalid input file format"
+    show Invalid_arguments = "Excepting argument -i or -t and optionally an input"
+    show Invalid_automaton_format = "Automaton is not valid"

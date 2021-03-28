@@ -17,41 +17,45 @@ import Parse
 main :: IO ()
 main = do
   argv <- getArgs
-
-  putStrLn "The arguments are:"
-  mapM putStrLn argv
-
   (action, input) <- case argv of
     [args] -> parse_args args =<< getContents
     [args, filename] -> parse_args args =<< readFile filename
-    _ -> exit_with_error "Excepting an option argument and optionally an input" 44
-
---  putStrLn action
---  putStrLn input
-  putStrLn "------------------"
-  print (dynTypeRep (toDyn action))
-  print (dynTypeRep (toDyn input))
-  putStrLn "------------------"
-
-  ini <- parse <$> readFile "app/input.in"
+    _ -> exit_with_error Invalid_arguments 44
+    
+--  parsed_input <- parse <$> readFile "app/input.in"
+  let parsed_input = parse input 
+  
+  if parsed_input == [] 
+  then exit_with_error Invalid_file_format 10 
+  else do
+    let automaton = (fst (head parsed_input))
+    let is_valid = validate_automaton_a automaton
+--    let is_valid = validate_automaton_a ini
+--    putStrLn "--------TYPES----------"
+--    print (dynTypeRep (toDyn parsed_input))
+--    print (dynTypeRep (toDyn automaton))
+--    print (dynTypeRep (toDyn is_valid))
+--    putStrLn "--------AUTOMATON----------"
+--    print automaton
+--    putStrLn "--------VALID----------"
+--    print is_valid
+    if is_valid 
+    then 
+        action $ automaton 
+    else 
+      exit_with_error Invalid_automaton_format 2
+      
 --  print ini
-  let is_valid = validate_automaton_a ini
-  print (dynTypeRep (toDyn ini))
-  print (dynTypeRep (toDyn is_valid))
-  putStrLn "------------------"
---  print ini
---  print is_valid
-  if True then print is_valid else exit_with_error Invalid_file_format 2
-
-  putStrLn "------------------"
-  action $ ini
+--  print (dynTypeRep (toDyn ini))
+--  print (fst ini)
+--  parse_out $ head ini
 
 
 parse_args :: [Char] -> b -> IO (Finite_automaton -> IO (), b)
 parse_args arguments input = case arguments of
   "-i" -> return (print_finite_automaton, input)
   "-t" -> return (print_finite_automaton, input)
-  _ -> exit_with_error ("Unknown option: " ++ arguments) 10
+  _ -> exit_with_error Invalid_arguments 10
 
 
 print_finite_automaton :: Finite_automaton -> IO ()

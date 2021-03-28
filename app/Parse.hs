@@ -1,13 +1,15 @@
 module Parse where
 
-import Data.List
-import Data.Ord
 import Text.ParserCombinators.ReadP
-
 import Types
 
-parse :: String -> Finite_automaton
-parse = fst . minimumBy (comparing snd) . readP_to_S parse_finite_automaton
+parse :: String -> [(Finite_automaton, String)]
+parse input = readP_to_S parse_finite_automaton input
+
+--parse = readP_to_S parse_finite_automaton
+--parse = readP_to_S parse_finite_automaton "1,2,3,4,5,6,11\nab\n1\n1,6\n1,a,6\n1,b,2\n2,a,5"
+--parse = fst . minimumBy (comparing snd) . readP_to_S parse_finite_automaton
+--parse = last . readP_to_S parse_finite_automaton
 
 parse_finite_automaton :: ReadP Finite_automaton
 parse_finite_automaton = Finite_automaton
