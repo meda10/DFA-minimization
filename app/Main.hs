@@ -32,18 +32,15 @@ main = do
     let automaton = fst (head parsed_input)
 --    action $ automaton
 --    print (all_combinations (states automaton) (alphabet automaton))
-    let all_tr = allTransitions (states automaton) (alphabet automaton)
-    let exist_tr = existingTransitions (transition_function automaton)
-    let missing_tr = missingTransitions all_tr exist_tr
-    print all_tr
-    print exist_tr
-    print missing_tr
-    let f =  createSinkState automaton
-    print f
-    
---    print ( missing_tr)
---    print (all_tr \\ [("1",'a',"x"),("1",'b',"x")])
---    print (all_tr \\ exist_tr)
+--    let all_tr = allTransitions (states automaton) (alphabet automaton)
+--    let exist_tr = existingTransitions (transitions automaton)
+--    let missing_tr = missingTransitions all_tr exist_tr
+--    print missing_tr
+
+
+    let  g = removeUnusedStates $ createSinkState automaton
+    print g
+
 
   else
     exitWithError InvalidAutomatonFormat 2

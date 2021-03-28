@@ -80,7 +80,7 @@ subSequence (_:_ ) [] = False
 subSequence (a:as) (b:bs) = (if a == b then as else a:as) `subSequence` bs
 
 validateTransitions :: FiniteAutomaton -> Bool
-validateTransitions automaton_a = all (`validateTransition` automaton_a) (transition_function automaton_a)
+validateTransitions automaton_a = all (`validateTransition` automaton_a) (transitions automaton_a)
 
 validateTransition :: Transition -> FiniteAutomaton -> Bool
 validateTransition transition automaton_a =
@@ -90,7 +90,7 @@ validateTransition transition automaton_a =
       where (state_a,sym,state_b) = (source transition, symbol transition, destination transition)
 
 validateAutomatonA :: FiniteAutomaton -> Bool
-validateAutomatonA automaton_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transition_function_a) =
+validateAutomatonA automaton_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
   is_valid
   where
     is_valid =
@@ -98,5 +98,5 @@ validateAutomatonA automaton_a@(FiniteAutomaton states_a alphabet_a start_state_
       allUniqueElements states_a &&
       allUniqueElements alphabet_a &&
       subSequence accept_states_a states_a &&
-      allUniqueElements transition_function_a &&
+      allUniqueElements transitions_a &&
       validateTransitions automaton_a

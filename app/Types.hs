@@ -14,13 +14,13 @@ data Transition = Transition {
   destination :: State
 } deriving (Eq)
 
-data FiniteAutomaton
-  = FiniteAutomaton {states :: States,
-                     alphabet :: Alphabet,
-                     start_state :: State,
-                     accept_states :: States,
-                     transition_function :: [Transition]}
-  deriving Eq
+data FiniteAutomaton = FiniteAutomaton {
+  states :: States,
+  alphabet :: Alphabet,
+  start_state :: State,
+  accept_states :: States,
+  transitions :: [Transition]
+} deriving Eq
 
 instance Show Transition where
   show (Transition source_t symbol_t destination_t) =
@@ -28,12 +28,12 @@ instance Show Transition where
 --          "(" ++ source_t ++ "," ++ [symbol_t] ++ "," ++ destination_t ++ ")"
 
 instance Show FiniteAutomaton where
-  show (FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transition_function_a) =
+  show (FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
           intercalate "," states_a ++ "\n" ++
           alphabet_a ++ "\n" ++
           start_state_a ++ "\n" ++
           intercalate ","  accept_states_a ++ "\n" ++
-          (intercalate "\n" $ map show transition_function_a)
+          (intercalate "\n" $ map show transitions_a)
 
 data AllErrors = InvalidFileFormat | InvalidArguments | InvalidAutomatonFormat
 
