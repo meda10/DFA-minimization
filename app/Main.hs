@@ -4,6 +4,7 @@ import System.Environment
 import System.Exit
 import System.IO
 import Data.Dynamic
+import Data.List
 import System.IO.Error
 import Control.Exception
 import Control.Monad
@@ -13,34 +14,49 @@ import Text.Printf
 
 import Types
 import Parse
+import Minimize
 
 main :: IO ()
 main = do
   argv <- getArgs
   (action, input) <- case argv of
-    [args] -> parse_args args =<< getContents
-    [args, filename] -> parse_args args =<< readFile filename
-    _ -> exit_with_error Invalid_arguments 44
+    [args] -> parseArgs args =<< getContents
+    [args, filename] -> parseArgs args =<< readFile filename
+    _ -> exitWithError InvalidArguments 44
 
 --  parsed_input <- parse <$> readFile "app/input.in"
   let parsed_input = parse input
-  is_valid <- validate_parsed_input parsed_input
+  is_valid <- validateParsedInput parsed_input
   if is_valid
   then do
-    let automaton = (fst (head parsed_input))
-    action $ automaton
+    let automaton = fst (head parsed_input)
+--    action $ automaton
+--    print (all_combinations (states automaton) (alphabet automaton))
+    let all_tr = allTransitions (states automaton) (alphabet automaton)
+    let exist_tr = existingTransitions (transition_function automaton)
+    let missing_tr = missingTransitions all_tr exist_tr
+    print all_tr
+    print exist_tr
+    print missing_tr
+    let f =  createSinkState automaton
+    print f
+    
+--    print ( missing_tr)
+--    print (all_tr \\ [("1",'a',"x"),("1",'b',"x")])
+--    print (all_tr \\ exist_tr)
+
   else
-    exit_with_error Invalid_automaton_format 2
+    exitWithError InvalidAutomatonFormat 2
 
 --  do_something (parse input)
 
 
 --  if parsed_input == []
---  then exit_with_error Invalid_file_format 10
+--  then exitWithError Invalid_file_format 10
 --  else do
 --    let automaton = (fst (head parsed_input))
---    let is_valid = validate_automaton_a automaton
-----    let is_valid = validate_automaton_a ini
+--    let is_valid = validateAutomatonA automaton
+----    let is_valid = validateAutomatonA ini
 ----    putStrLn "--------TYPES----------"
 ----    print (dynTypeRep (toDyn parsed_input))
 ----    print (dynTypeRep (toDyn automaton))
@@ -53,23 +69,23 @@ main = do
 --    then
 --        action $ automaton
 --    else
---      exit_with_error Invalid_automaton_format 2
+--      exitWithError Invalid_automaton_format 2
 
 
-validate_parsed_input :: [(Finite_automaton, b)] -> IO Bool
-validate_parsed_input [] = exit_with_error Invalid_file_format 10
-validate_parsed_input parsed_input = return (validate_automaton_a (fst (head parsed_input)))
+validateParsedInput :: [(FiniteAutomaton, b)] -> IO Bool
+validateParsedInput [] = exitWithError InvalidFileFormat 10
+validateParsedInput parsed_input = return (validateAutomatonA (fst (head parsed_input)))
 
 
-parse_args :: [Char] -> b -> IO (Finite_automaton -> IO (), b)
-parse_args arguments input = case arguments of
-  "-i" -> return (print_finite_automaton, input)
-  "-t" -> return (print_finite_automaton, input)
-  _ -> exit_with_error Invalid_arguments 10
+parseArgs :: [Char] -> b -> IO (FiniteAutomaton -> IO (), b)
+parseArgs arguments input = case arguments of
+  "-i" -> return (printFiniteAutomaton, input)
+  "-t" -> return (printFiniteAutomaton, input)
+  _ -> exitWithError InvalidArguments 10
 
 
-print_finite_automaton :: Finite_automaton -> IO ()
-print_finite_automaton = putStr . show
+printFiniteAutomaton :: FiniteAutomaton -> IO ()
+printFiniteAutomaton = putStr . show
 
 
 -- Prints the context-free grammar to the standard output after the 'simplify1'
@@ -82,9 +98,9 @@ print_finite_automaton = putStr . show
 --undefined_option :: String -> IO a
 --undefined_option str = hPutStrLn stderr str >> exitFailure
 
-exit_with_error :: Show a => a -> Int -> IO b
-exit_with_error error_msg code = hPutStrLn stderr ("ERROR: " ++ show error_msg) >> exitWith (ExitFailure code)
---exit_with_error :: String -> Int -> IO a
---exit_with_error str code = hPutStrLn stderr str >> exitWith (ExitFailure code)
+exitWithError :: Show a => a -> Int -> IO b
+exitWithError error_msg code = hPutStrLn stderr ("ERROR: " ++ show error_msg) >> exitWith (ExitFailure code)
+--exitWithError :: String -> Int -> IO a
+--exitWithError str code = hPutStrLn stderr str >> exitWith (ExitFailure code)
 
 
