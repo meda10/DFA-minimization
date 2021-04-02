@@ -112,16 +112,7 @@ nonEmptyDifference a b = (a \\ b) /= []
 get_tr_leads :: Foldable t => Symbol -> t State -> [Transition] -> [State]
 get_tr_leads sym dst transitions_t = [ source_t | tr <- transitions_t, source_t <- [source tr], destination_t <- [destination tr] , symbol_t <- [symbol tr], destination_t `elem` dst && symbol_t == sym]
 
-
---replaceAndAdd :: Ord a => [[a]] -> [a] -> [a] -> [[a]]
---replaceAndAdd list x y = insert (y \\ x) $ insert (intersect x y) $ delete y list
-
-
---doSomething p w x y = ([], [])
---doSomething p w x y = (mod_p, [])
---  where
---    mod_p = replaceAndAdd p x y
-
+---------------------------------------
 
 doSomething :: Ord a => [[a]] -> [[a]] -> [a] -> [a] -> ([[a]], [[a]])
 doSomething p w x y =
@@ -146,9 +137,6 @@ forEachXY p w _ [] = (p, w)
 forEachXY p w x (y: y_tail) = forEachXY mod_p mod_w x y_tail
   where
     (mod_p, mod_w) = if nonEmptyDifference y x && nonEmptyIntersect x y then doSomething p w x y else (p, w)
---    (mod_p, mod_w) = doSomething p w x y
-
-
 
 foreachLetterAlphabet :: Foldable t => [[State]] -> [[State]] -> t State -> [Symbol] -> [Transition] -> ([[State]], [[State]])
 foreachLetterAlphabet p w _ [] _ = (p, w)
@@ -158,50 +146,56 @@ foreachLetterAlphabet p w a (alphabet_head : alphabet_tail) transitions_a = fore
     (mod_p, mod_w) = forEachXY p w x p
 
 
-mainWhile :: [[State]] -> [[State]] -> [Symbol] -> [Transition] -> [[State]]
-mainWhile p [] _ _ = p
+mainWhile :: [[State]] -> [[State]] -> [Symbol] -> [Transition] -> States
+mainWhile p [] _ _ = [ intercalate "" w | w <- p]
 mainWhile p (a : w) alphabet_a transitions_a = mainWhile mod_p mod_w alphabet_a transitions_a
   where
     (mod_p, mod_w) = foreachLetterAlphabet p w a alphabet_a transitions_a
 
+-------------------------------------------------------------
 
+isSubset :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
+isSubset a b = all (`elem` b) a
 
---createNewStates states_s old_states alphabet_a transitions_t =
---        if states_s == old_states
---        then states_s
---        else do
---          let new_states = states_s
---          createNewStates new_states old_states alphabet_a transitions_t
---
+createNewTransitions :: [[Char]] -> [Transition] -> [Transition]
+createNewTransitions states_s transitions_t = nub [ Transition src_state symbol_t dst_state | tr <- transitions_t, source_t <- [source tr],
+        symbol_t <- [symbol tr], destination_t <- [destination tr], src_state <- states_s, src_s <- src_state, [src_s] == source_t,
+        dst_state <- states_s, dst_s <- dst_state, [dst_s] == destination_t] --todo elem working only with string
 
----- Merge lists
---merge :: [a] -> [a] -> [a]
---merge xs     []     = xs
---merge []     ys     = ys
---merge (x:xs) (y:ys) = x : y : merge xs ys
---
---zeroIteration fsm = [fs, nfs] -- Merged list
---    where
---        fs = filter (\(x,y) -> x <= y) [(p, q) | p <- accept_states fsm, q <- accept_states fsm]    -- Finite states
---        nfs = filter (\(x,y) -> x <= y) [(p, q) | p <- states fsm, q <- states fsm] -- Non finite states
---
---
+createFinalStates :: (Foldable t1, Foldable t2, Eq a, Eq (t2 a)) => [t1 a] -> [t2 a] -> [t2 a]
+createFinalStates old states_s = nub [ state | state <- states_s, old_s <- old, old_s `isSubset` state]
 
+-------------------------------------------------------------
+ 
+renameStates :: Eq a => [a] -> [State]
+renameStates old = sort [ show index | state <- old, Just index <- [elemIndex state old]] 
+ 
 
---createNewStatesIteration states_s alphabet_a transitions_t = [(p,q) | ]
+renameFinalStates :: Eq a1 => [a1] -> [a2] -> [a2]
+renameFinalStates old new = [ new !! index | state <- old, Just index <- [elemIndex state old]]
+
+renameTransitions :: [State] -> [State] -> [Transition] -> [Transition]
+renameTransitions old new transitions_t = nub [ Transition (new !! index_src) symbol_t (new !! index_dst) | tr <- transitions_t, source_t <- [source tr],
+        symbol_t <- [symbol tr], destination_t <- [destination tr], source_t `elem` old, Just index_src <- [elemIndex source_t old],
+        destination_t `elem` old, Just index_dst <- [elemIndex destination_t old]]
+
 
 
 minimalAutomaton :: FiniteAutomaton -> FiniteAutomaton
 minimalAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
-        fin_a { states = states_a,
+        fin_a { states = renamed_states,
                 alphabet = alphabet_a,
-                start_state = start_state_a,
-                accept_states = accept_states_a,
-                transitions = transitions_a}
---        start
+                start_state = "0",
+                accept_states = renamed_fin,
+                transitions = renamed_tr}
           where
---            new_states = createNewStates [accept_states_a, states_a \\ accept_states_a] [] alphabet_a transitions_a
-            start = [accept_states_a, states_a \\ accept_states_a]
---            new_states = mainWhile start start alphabet_a transitions_a
-            new_transitions = True
-            new_accept_states = True
+            p = [accept_states_a, states_a \\ accept_states_a]
+            new_states = mainWhile p p alphabet_a transitions_a
+            new_start_state = concat (createFinalStates [start_state_a] new_states)
+            xxx = delete new_start_state new_states
+            zzz = new_start_state : xxx 
+            renamed_states = renameStates zzz
+            new_transitions = createNewTransitions new_states transitions_a
+            renamed_tr = renameTransitions new_states renamed_states new_transitions
+            new_accept_states = createFinalStates accept_states_a new_states
+            renamed_fin = renameFinalStates new_accept_states renamed_states

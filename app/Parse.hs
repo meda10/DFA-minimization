@@ -75,7 +75,7 @@ allUniqueElements [] = True
 allUniqueElements (x:xs) = notElem x xs && allUniqueElements xs
 
 isSubset :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
-isSubset a b = all (`elem` b) a 
+isSubset a b = all (`elem` b) a
 
 validateTransitions :: FiniteAutomaton -> Bool
 validateTransitions automaton_a = all (`validateTransition` automaton_a) (transitions automaton_a)

@@ -38,14 +38,35 @@ main = do
 
 --    action $ removeUnusedStates $ createSinkState automaton
     let automat = removeUnusedStates $ createSinkState automaton
---    let a =  minimalAutomaton automat
---    print a
+    let a =  minimalAutomaton automat
+    print a
+
 
     let p = [accept_states automat, states automat \\ accept_states automat]
     let new_states = mainWhile p p (alphabet automat) (transitions automat)
     print "------------"
     print new_states
 
+--    let jjj = concat (createFinalStates [start_state automat] new_states)
+--    print jjj
+--    print (start_state automat)
+
+
+--    let o = toHead "3" ["2","3","4","5"]
+--    print o
+
+
+--    let t = createNewTransitions new_states (transitions automat)
+--    print t
+--
+--    let nn = renameTransitions new_states ["0", "1", "2"] t
+--    print nn
+--
+--    let rrp = createFinalStates (accept_states automat) new_states
+--    print rrp
+--
+--    let tt = renameStates new_states
+--    print tt
 
 --    print "------For alphabet------"
 --    let w = [["2","3","4","5"]]
@@ -132,5 +153,3 @@ exitWithError :: Show a => a -> Int -> IO b
 exitWithError error_msg code = hPutStrLn stderr ("ERROR: " ++ show error_msg) >> exitWith (ExitFailure code)
 --exitWithError :: String -> Int -> IO a
 --exitWithError str code = hPutStrLn stderr str >> exitWith (ExitFailure code)
-
-
