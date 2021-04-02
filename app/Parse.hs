@@ -71,13 +71,11 @@ transitionParser = Transition
 -------------------------------------------------------------
 
 allUniqueElements :: (Eq a) => [a] -> Bool
-allUniqueElements []     = True
+allUniqueElements [] = True
 allUniqueElements (x:xs) = notElem x xs && allUniqueElements xs
 
-subSequence :: Eq a => [a] -> [a] -> Bool
-subSequence [] _ = True
-subSequence (_:_ ) [] = False
-subSequence (a:as) (b:bs) = (if a == b then as else a:as) `subSequence` bs
+isSubset :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
+isSubset a b = all (`elem` b) a 
 
 validateTransitions :: FiniteAutomaton -> Bool
 validateTransitions automaton_a = all (`validateTransition` automaton_a) (transitions automaton_a)
@@ -97,6 +95,6 @@ validateAutomatonA automaton_a@(FiniteAutomaton states_a alphabet_a start_state_
       elem start_state_a states_a &&
       allUniqueElements states_a &&
       allUniqueElements alphabet_a &&
-      subSequence accept_states_a states_a &&
+      accept_states_a `isSubset` states_a &&
       allUniqueElements transitions_a &&
       validateTransitions automaton_a

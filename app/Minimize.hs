@@ -1,8 +1,7 @@
 module Minimize where
 
-import Data.List  
+import Data.List
 import Types
-  
 
 -------------------------------------------------------------
 
@@ -40,14 +39,6 @@ createSinkState fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_
 
 -------------------------------------------------------------
 
-removeUnusedTransitions :: Foldable t => t State -> [Transition] -> [Transition]
-removeUnusedTransitions states_s transitions_t = [ tr | tr <- transitions_t, source tr `elem` states_s && destination tr `elem` states_s]
-
-accessibleStatesIteration :: [State] -> [Transition] -> [State]
-accessibleStatesIteration [] _ = []
-accessibleStatesIteration _ [] = []
-accessibleStatesIteration states_s transitions_t = states_s ++ [ q | tr <- transitions_t, st <- states_s, q <- [destination tr], source tr == st]
-
 accessibleStates :: [State] -> [State] -> [Transition] -> [State]
 accessibleStates [] _ _ = []
 accessibleStates _ _ [] = []
@@ -55,8 +46,8 @@ accessibleStates states_s old_states transitions_t =
         if states_s == old_states
         then states_s
         else do
-          let st = nub $ sort (accessibleStatesIteration states_s transitions_t)
-          accessibleStates st states_s transitions_t
+          let new_states = nub $ sort (states_s ++ [ q | tr <- transitions_t, st <- states_s, q <- [destination tr], source tr == st]) --todo check maybe `elem`
+          accessibleStates new_states states_s transitions_t
 
 
 removeUnusedStates :: FiniteAutomaton -> FiniteAutomaton
@@ -68,4 +59,149 @@ removeUnusedStates fin_a@(FiniteAutomaton states_a alphabet_a start_state_a acce
                 transitions = new_transitions}
           where
             new_states = accessibleStates [start_state_a] [] transitions_a
-            new_transitions = removeUnusedTransitions new_states transitions_a
+            new_transitions = [ tr | tr <- transitions_a, source tr `elem` new_states && destination tr `elem` new_states]
+
+-------------------------------------------------------------
+
+nonEmptyIntersect :: Eq a => [a] -> [a] -> Bool
+nonEmptyIntersect [] _ = False
+nonEmptyIntersect _ [] = False
+nonEmptyIntersect a b = intersect a b /= []
+
+nonEmptyDifference :: Eq a => [a] -> [a] -> Bool
+nonEmptyDifference [] _ = False
+nonEmptyDifference _ [] = False
+nonEmptyDifference a b = (a \\ b) /= []
+
+--Vstup: Úplně definovaný DKA M= (Q,Σ,δ,q0,F)
+--Výstup: Redukovaný DKA M′= (Q′,Σ,δ′,q′0,F′), L(M) = L(M′)
+--Metoda:
+--1. Odstraň nedosažitelné stavy s využitím algoritmu 3.4
+--2. i:= 0
+--3. 0≡ := {(p,q)|p∈F⇐⇒q∈F}
+--4. repeat
+--5. i+1≡ := {(p,q)|pi ≡ q ∧ ∀a∈Σ :δ(p,a)i≡δ(q,a)}
+--6. i := i+1
+--7. until i≡=i−1≡
+--8. Q′ := Q/i≡
+--9. ∀p,q ∈ Q ∀a ∈ Σ : δ′([p],a) = [q]⇔δ(p,a) =q10.q′0= [q0]11.F′={[q]|q∈F}
+
+
+--P := {F, Q \ F};
+--W := {F, Q \ F};
+--while (W is not empty) do
+--     choose and remove a set A from W
+--     for each c in Σ do
+--          let X be the set of states for which a transition on c leads to a state in A
+--          for each set Y in P for which X ∩ Y is nonempty and Y \ X is nonempty do
+--               replace Y in P by the two sets X ∩ Y and Y \ X
+--               if Y is in W
+--                    replace Y in W by the same two sets
+--               else
+--                    if |X ∩ Y| <= |Y \ X|
+--                         add X ∩ Y to W
+--                    else
+--                         add Y \ X to W
+--          end;
+--     end;
+--end;
+
+--get_tr_leads :: Symbol -> [State] -> [Transition] -> [State]
+--get_tr_leads _ _ [] = [] --todo
+--get_tr_leads _ [] _ = []
+get_tr_leads :: Foldable t => Symbol -> t State -> [Transition] -> [State]
+get_tr_leads sym dst transitions_t = [ source_t | tr <- transitions_t, source_t <- [source tr], destination_t <- [destination tr] , symbol_t <- [symbol tr], destination_t `elem` dst && symbol_t == sym]
+
+
+--replaceAndAdd :: Ord a => [[a]] -> [a] -> [a] -> [[a]]
+--replaceAndAdd list x y = insert (y \\ x) $ insert (intersect x y) $ delete y list
+
+
+--doSomething p w x y = ([], [])
+--doSomething p w x y = (mod_p, [])
+--  where
+--    mod_p = replaceAndAdd p x y
+
+
+doSomething :: Ord a => [[a]] -> [[a]] -> [a] -> [a] -> ([[a]], [[a]])
+doSomething p w x y =
+  if y `elem` w then
+    (new_p, new_w)
+  else
+    if length intersection <= length difference then
+      (new_p, w_add_intersection)
+    else
+      (new_p, w_add_difference)
+  where
+    intersection = intersect x y
+    difference = y \\ x
+    new_p = insert difference $ insert intersection $ delete y p
+    new_w = insert difference $ insert intersection $ delete y w
+    w_add_intersection = insert intersection w
+    w_add_difference = insert difference w
+
+
+forEachXY :: Ord a => [[a]] -> [[a]] -> [a] -> [[a]] -> ([[a]], [[a]])
+forEachXY p w _ [] = (p, w)
+forEachXY p w x (y: y_tail) = forEachXY mod_p mod_w x y_tail
+  where
+    (mod_p, mod_w) = if nonEmptyDifference y x && nonEmptyIntersect x y then doSomething p w x y else (p, w)
+--    (mod_p, mod_w) = doSomething p w x y
+
+
+
+foreachLetterAlphabet :: Foldable t => [[State]] -> [[State]] -> t State -> [Symbol] -> [Transition] -> ([[State]], [[State]])
+foreachLetterAlphabet p w _ [] _ = (p, w)
+foreachLetterAlphabet p w a (alphabet_head : alphabet_tail) transitions_a = foreachLetterAlphabet mod_p mod_w a alphabet_tail transitions_a
+  where
+    x = get_tr_leads alphabet_head a transitions_a
+    (mod_p, mod_w) = forEachXY p w x p
+
+
+mainWhile :: [[State]] -> [[State]] -> [Symbol] -> [Transition] -> [[State]]
+mainWhile p [] _ _ = p
+mainWhile p (a : w) alphabet_a transitions_a = mainWhile mod_p mod_w alphabet_a transitions_a
+  where
+    (mod_p, mod_w) = foreachLetterAlphabet p w a alphabet_a transitions_a
+
+
+
+--createNewStates states_s old_states alphabet_a transitions_t =
+--        if states_s == old_states
+--        then states_s
+--        else do
+--          let new_states = states_s
+--          createNewStates new_states old_states alphabet_a transitions_t
+--
+
+---- Merge lists
+--merge :: [a] -> [a] -> [a]
+--merge xs     []     = xs
+--merge []     ys     = ys
+--merge (x:xs) (y:ys) = x : y : merge xs ys
+--
+--zeroIteration fsm = [fs, nfs] -- Merged list
+--    where
+--        fs = filter (\(x,y) -> x <= y) [(p, q) | p <- accept_states fsm, q <- accept_states fsm]    -- Finite states
+--        nfs = filter (\(x,y) -> x <= y) [(p, q) | p <- states fsm, q <- states fsm] -- Non finite states
+--
+--
+
+
+--createNewStatesIteration states_s alphabet_a transitions_t = [(p,q) | ]
+
+
+minimalAutomaton :: FiniteAutomaton -> FiniteAutomaton
+minimalAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
+        fin_a { states = states_a,
+                alphabet = alphabet_a,
+                start_state = start_state_a,
+                accept_states = accept_states_a,
+                transitions = transitions_a}
+--        start
+          where
+--            new_states = createNewStates [accept_states_a, states_a \\ accept_states_a] [] alphabet_a transitions_a
+            start = [accept_states_a, states_a \\ accept_states_a]
+--            new_states = mainWhile start start alphabet_a transitions_a
+            new_transitions = True
+            new_accept_states = True

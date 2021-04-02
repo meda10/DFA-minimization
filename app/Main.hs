@@ -30,22 +30,55 @@ main = do
   if is_valid
   then do
     let automaton = fst (head parsed_input)
---    action $ automaton
---    print (all_combinations (states automaton) (alphabet automaton))
 --    let all_tr = allTransitions (states automaton) (alphabet automaton)
 --    let exist_tr = existingTransitions (transitions automaton)
 --    let missing_tr = missingTransitions all_tr exist_tr
 --    print missing_tr
 
 
-    let  g = removeUnusedStates $ createSinkState automaton
-    print g
+--    action $ removeUnusedStates $ createSinkState automaton
+    let automat = removeUnusedStates $ createSinkState automaton
+--    let a =  minimalAutomaton automat
+--    print a
+
+    let p = [accept_states automat, states automat \\ accept_states automat]
+    let new_states = mainWhile p p (alphabet automat) (transitions automat)
+    print "------------"
+    print new_states
+
+
+--    print "------For alphabet------"
+--    let w = [["2","3","4","5"]]
+--    let a = ["1", "6"]
+--    let y_list = [["1","6"],["2","3","4","5"]]
+--
+--    let f = foreachLetterAlphabet p w a (alphabet automat) (transitions automat)
+--    print f
+--
+--    print "------For XY ------"
+--    let x = ["3", "4"]
+--    let www = forEachXY p [["2","3","4","5"]] x y_list
+--    let b = nonEmptyDifference ["2","3","4","5"] x && nonEmptyIntersect x ["2","3","4","5"]
+--    print www
+--    print b
+--    print "------------"
+--    print (nonEmptyDifference ["2","3","4","5"] x)
+--    print (nonEmptyIntersect x ["2","3","4","5"])
+--    print (["2","3","4","5"] \\ x)
+--    print (["2","3","4","5"] `intersect` x)
+--    print "------------"
+
+--    print "------Do something ------"
+--    let y = doSomething start [["2","3","4","5"]] ["3", "4"] ["2","3","4","5"]
+--    print y
+
+
+
+
 
 
   else
     exitWithError InvalidAutomatonFormat 2
-
---  do_something (parse input)
 
 
 --  if parsed_input == []
