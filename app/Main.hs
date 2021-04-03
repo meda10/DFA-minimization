@@ -30,7 +30,7 @@ main = do
   if is_valid
   then do
     action $ sortItemsInAutomaton (fst (head parsed_input))
-    
+
 --    let automaton = sortItemsInAutomaton (fst (head parsed_input))
 --    print "------RM------"
 --    let automat = removeUnusedStates $ createSinkState automaton

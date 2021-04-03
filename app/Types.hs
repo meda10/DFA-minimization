@@ -33,7 +33,7 @@ instance Show FiniteAutomaton where
           alphabet_a ++ "\n" ++
           start_state_a ++ "\n" ++
           intercalate ","  accept_states_a ++ "\n" ++
-          (intercalate "\n" $ map show transitions_a)
+          intercalate "\n" (map show transitions_a)
 
 data AllErrors = InvalidFileFormat | InvalidArguments | InvalidAutomatonFormat
 

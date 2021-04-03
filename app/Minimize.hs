@@ -4,7 +4,7 @@
 
 module Minimize where
 
-import Data.List
+import Data.List (nub, sort, intersect, intersect, insert, delete, intercalate, isInfixOf, isPrefixOf, isSuffixOf, elemIndex, (\\))
 import Types
 
 -------------------------------------------------------------
@@ -59,7 +59,7 @@ accessibleStates states_s old_states transitions_t =
 
 
 removeUnusedStates :: FiniteAutomaton -> FiniteAutomaton
-removeUnusedStates fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
+removeUnusedStates fin_a@(FiniteAutomaton _ alphabet_a start_state_a accept_states_a transitions_a) =
         fin_a { states = new_states,
                 alphabet = alphabet_a,
                 start_state = start_state_a,
