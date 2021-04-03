@@ -12,7 +12,7 @@ data Transition = Transition {
   source :: State,
   symbol :: Symbol,
   destination :: State
-} deriving (Eq)
+} deriving (Eq, Ord)
 
 data FiniteAutomaton = FiniteAutomaton {
   states :: States,
@@ -20,7 +20,7 @@ data FiniteAutomaton = FiniteAutomaton {
   start_state :: State,
   accept_states :: States,
   transitions :: [Transition]
-} deriving Eq
+} deriving (Eq)
 
 instance Show Transition where
   show (Transition source_t symbol_t destination_t) =

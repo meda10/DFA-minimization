@@ -1,3 +1,7 @@
+--  Project: 
+--  Author: Petr Medek 
+--  Year: 2020
+
 module Minimize where
 
 import Data.List
@@ -7,9 +11,12 @@ import Types
 
 sinkState :: String
 sinkState = "x"
+
+sinkStateTransitions :: [Symbol] -> [Transition]
+sinkStateTransitions alphabet_a = [Transition sinkState symbol_t sinkState | symbol_t <- alphabet_a]
   
 createSinkTransition :: [(State, Symbol)] -> [Transition]
-createSinkTransition transitions_t = [Transition source_t symbol_t destination_t | tr <- transitions_t, source_t <- [fst tr], symbol_t <- [snd tr], destination_t <- [sinkState]]
+createSinkTransition transitions_t = [Transition source_t symbol_t sinkState | tr <- transitions_t, source_t <- [fst tr], symbol_t <- [snd tr]]
 
 allTransitions :: [a] -> [b] -> [(a, b)]
 allTransitions _ [] = []
@@ -30,12 +37,13 @@ createSinkState fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_
                                                       alphabet = alphabet_a,
                                                       start_state = start_state_a,
                                                       accept_states = accept_states_a,
-                                                      transitions = transitions_a ++ missing_tr}
+                                                      transitions = transitions_a ++ missing_tr ++ sink_state_transitions}
           where
             all_tr = allTransitions (states fin_a) (alphabet fin_a)
             existing_tr = existingTransitions (transitions fin_a)
             missing = missingTransitions all_tr existing_tr
             missing_tr = createSinkTransition missing
+            sink_state_transitions = sinkStateTransitions alphabet_a
 
 -------------------------------------------------------------
 
@@ -147,7 +155,7 @@ foreachLetterAlphabet p w a (alphabet_head : alphabet_tail) transitions_a = fore
 
 
 mainWhile :: [[State]] -> [[State]] -> [Symbol] -> [Transition] -> States
-mainWhile p [] _ _ = [ intercalate "" w | w <- p]
+mainWhile p [] _ _ = delete "" [ intercalate "" w | w <- p]
 mainWhile p (a : w) alphabet_a transitions_a = mainWhile mod_p mod_w alphabet_a transitions_a
   where
     (mod_p, mod_w) = foreachLetterAlphabet p w a alphabet_a transitions_a
@@ -163,39 +171,73 @@ createNewTransitions states_s transitions_t = nub [ Transition src_state symbol_
         dst_state <- states_s, dst_s <- dst_state, [dst_s] == destination_t] --todo elem working only with string
 
 createFinalStates :: (Foldable t1, Foldable t2, Eq a, Eq (t2 a)) => [t1 a] -> [t2 a] -> [t2 a]
-createFinalStates old states_s = nub [ state | state <- states_s, old_s <- old, old_s `isSubset` state]
+createFinalStates accept_s states_s = nub [ state | state <- states_s, acc_s <- accept_s, acc_s `isSubset` state]
 
 -------------------------------------------------------------
  
-renameStates :: Eq a => [a] -> [State]
-renameStates old = sort [ show index | state <- old, Just index <- [elemIndex state old]] 
- 
+renameStates :: Eq a1 => [a1] -> [a2] -> [a2]
+renameStates old new = [ new !! index | state <- old, state `elem` old, Just index <- [elemIndex state old]]
 
-renameFinalStates :: Eq a1 => [a1] -> [a2] -> [a2]
-renameFinalStates old new = [ new !! index | state <- old, Just index <- [elemIndex state old]]
+renameFinalStates :: Eq a1 => [a1] -> [a2] -> [a1] -> [a2]
+renameFinalStates states_s reamed_s accept_s = [ reamed_s !! index | state <- accept_s, Just index <- [elemIndex state states_s]]
 
 renameTransitions :: [State] -> [State] -> [Transition] -> [Transition]
-renameTransitions old new transitions_t = nub [ Transition (new !! index_src) symbol_t (new !! index_dst) | tr <- transitions_t, source_t <- [source tr],
-        symbol_t <- [symbol tr], destination_t <- [destination tr], source_t `elem` old, Just index_src <- [elemIndex source_t old],
-        destination_t `elem` old, Just index_dst <- [elemIndex destination_t old]]
+renameTransitions states_s renamed_s transitions_t = nub [ Transition (renamed_s !! index_src) symbol_t (renamed_s !! index_dst) | tr <- transitions_t, source_t <- [source tr],
+        symbol_t <- [symbol tr], destination_t <- [destination tr], source_t `elem` states_s, Just index_src <- [elemIndex source_t states_s],
+        destination_t `elem` states_s, Just index_dst <- [elemIndex destination_t states_s]]
 
+getStatesPositionsInTransition :: [Transition] -> [State]
+getStatesPositionsInTransition transitions_t = nub (concat [[src,dst] | tr <- transitions_t, src <- [source tr], dst <- [destination tr]])
+
+renameStartStateInStates :: [State] -> State -> [State]
+renameStartStateInStates states_s start_state_s  = [ if start_state_s == state then "0" else if state == "0" then "y" else state | state <- states_s]
+
+getIndex :: Eq a => [a] -> [a] -> [String]
+getIndex old positions = [ show index | state <- old, state `elem` positions, Just index <- [elemIndex state positions]]
+
+renameAll :: [State] -> [State] -> State -> [State] -> [Transition] -> ([State], State, [State], [Transition])
+renameAll old_states new_states start_state_a accept_states_a transitions_a =
+        (states_s, start_state_s, fin_states, transitions_t)
+          where
+            states_s = renameStates old_states new_states
+            start_state_s = concat (renameFinalStates old_states new_states [start_state_a])
+            fin_states = renameFinalStates old_states new_states accept_states_a
+            transitions_t = sort (renameTransitions old_states new_states (sort transitions_a))
+
+renameAutomaton :: [State] -> [Char] -> [State] -> [Transition] -> ([State], [Char], [State], [Transition])
+renameAutomaton states_s start_state_s accept_states_s transitions_t =
+        (s, st, accept, tr)
+          where
+            renamed_start_state = renameStartStateInStates states_s start_state_s
+            (s1, st1, accept1, tr1) = renameAll states_s renamed_start_state start_state_s accept_states_s transitions_t
+            renamed_states = getIndex s1 (getStatesPositionsInTransition tr1)
+            (s, st, accept, tr) = renameAll s1 renamed_states st1 accept1 tr1
 
 
 minimalAutomaton :: FiniteAutomaton -> FiniteAutomaton
 minimalAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
-        fin_a { states = renamed_states,
-                alphabet = alphabet_a,
-                start_state = "0",
-                accept_states = renamed_fin,
-                transitions = renamed_tr}
+        fin_a { states = sort s,
+                alphabet = sort alphabet_a,
+                start_state = sort st,
+                accept_states = sort accept,
+                transitions = sort tr}
           where
             p = [accept_states_a, states_a \\ accept_states_a]
-            new_states = mainWhile p p alphabet_a transitions_a
+            new_states = mainWhile p p alphabet_a (sort transitions_a)
             new_start_state = concat (createFinalStates [start_state_a] new_states)
-            xxx = delete new_start_state new_states
-            zzz = new_start_state : xxx 
-            renamed_states = renameStates zzz
-            new_transitions = createNewTransitions new_states transitions_a
-            renamed_tr = renameTransitions new_states renamed_states new_transitions
+            new_transitions = createNewTransitions new_states (sort transitions_a)
             new_accept_states = createFinalStates accept_states_a new_states
-            renamed_fin = renameFinalStates new_accept_states renamed_states
+            (s, st, accept, tr) =  renameAutomaton new_states new_start_state new_accept_states new_transitions
+
+
+--            r_states = renameStartInStates new_states new_start_state
+--            r_tr_start_state = sort (renameTransitions new_states r_states new_transitions)
+--            renamed_states = getNames r_tr_start_state
+--            renamed_states = renameStates $ getNames r_tr_start_state
+--            renamed_states = renameStates $ new_start_state : delete new_start_state new_states
+--            renamed_tr = sort (renameTransitions r_states renamed_states r_tr_start_state)
+--            renamed_fin = renameFinalStates r_states renamed_states new_accept_states
+
+
+--sortBy (\(a,_) (b,_) -> compare a b) [(2, "world"), (4, "!"), (1, "Hello")]
+--[(1,"Hello"),(2,"world"),(4,"!")]

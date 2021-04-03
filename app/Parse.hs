@@ -2,9 +2,19 @@ module Parse where
 
 import Text.ParserCombinators.ReadP
 import Types
+import Data.List
 
 parse :: String -> [(FiniteAutomaton, String)]
 parse = readP_to_S parseFiniteAutomaton
+
+
+sortItemsInAutomaton :: FiniteAutomaton -> FiniteAutomaton
+sortItemsInAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
+  fin_a { states = sort states_a,
+                   alphabet = sort alphabet_a,
+                   start_state = start_state_a,
+                   accept_states = sort accept_states_a,
+                   transitions = sort transitions_a}
 
 --parse = readP_to_S parse_FiniteAutomaton
 --parse = readP_to_S parse_FiniteAutomaton "1,2,3,4,5,6,11\nab\n1\n1,6\n1,a,6\n1,b,2\n2,a,5"
