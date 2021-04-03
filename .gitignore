@@ -3,3 +3,6 @@
 # Project exclude paths
 /out/
 ./.idea
+./src/web_tests/
+./test/err/
+./test/out/

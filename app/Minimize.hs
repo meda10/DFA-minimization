@@ -1,6 +1,6 @@
 --  Project: 
 --  Author: Petr Medek 
---  Year: 2020
+--  Year: 2021
 
 module Minimize where
 
@@ -81,44 +81,9 @@ nonEmptyDifference [] _ = False
 nonEmptyDifference _ [] = False
 nonEmptyDifference a b = (a \\ b) /= []
 
---Vstup: Úplně definovaný DKA M= (Q,Σ,δ,q0,F)
---Výstup: Redukovaný DKA M′= (Q′,Σ,δ′,q′0,F′), L(M) = L(M′)
---Metoda:
---1. Odstraň nedosažitelné stavy s využitím algoritmu 3.4
---2. i:= 0
---3. 0≡ := {(p,q)|p∈F⇐⇒q∈F}
---4. repeat
---5. i+1≡ := {(p,q)|pi ≡ q ∧ ∀a∈Σ :δ(p,a)i≡δ(q,a)}
---6. i := i+1
---7. until i≡=i−1≡
---8. Q′ := Q/i≡
---9. ∀p,q ∈ Q ∀a ∈ Σ : δ′([p],a) = [q]⇔δ(p,a) =q10.q′0= [q0]11.F′={[q]|q∈F}
-
-
---P := {F, Q \ F};
---W := {F, Q \ F};
---while (W is not empty) do
---     choose and remove a set A from W
---     for each c in Σ do
---          let X be the set of states for which a transition on c leads to a state in A
---          for each set Y in P for which X ∩ Y is nonempty and Y \ X is nonempty do
---               replace Y in P by the two sets X ∩ Y and Y \ X
---               if Y is in W
---                    replace Y in W by the same two sets
---               else
---                    if |X ∩ Y| <= |Y \ X|
---                         add X ∩ Y to W
---                    else
---                         add Y \ X to W
---          end;
---     end;
---end;
-
---get_tr_leads :: Symbol -> [State] -> [Transition] -> [State]
---get_tr_leads _ _ [] = [] --todo
---get_tr_leads _ [] _ = []
-get_tr_leads :: Foldable t => Symbol -> t State -> [Transition] -> [State]
-get_tr_leads sym dst transitions_t = [ source_t | tr <- transitions_t, source_t <- [source tr], destination_t <- [destination tr] , symbol_t <- [symbol tr], destination_t `elem` dst && symbol_t == sym]
+transitionLeadsTo :: Foldable t => Symbol -> t State -> [Transition] -> [State]
+transitionLeadsTo _ _ [] = []
+transitionLeadsTo sym dst transitions_t = [ source_t | tr <- transitions_t, source_t <- [source tr], destination_t <- [destination tr] , symbol_t <- [symbol tr], destination_t `elem` dst && symbol_t == sym]
 
 ---------------------------------------
 
@@ -150,31 +115,36 @@ foreachLetterAlphabet :: Foldable t => [[State]] -> [[State]] -> t State -> [Sym
 foreachLetterAlphabet p w _ [] _ = (p, w)
 foreachLetterAlphabet p w a (alphabet_head : alphabet_tail) transitions_a = foreachLetterAlphabet mod_p mod_w a alphabet_tail transitions_a
   where
-    x = get_tr_leads alphabet_head a transitions_a
+    x = transitionLeadsTo alphabet_head a transitions_a
     (mod_p, mod_w) = forEachXY p w x p
 
 
 mainWhile :: [[State]] -> [[State]] -> [Symbol] -> [Transition] -> States
-mainWhile p [] _ _ = delete "" [ intercalate "" w | w <- p]
+mainWhile p [] _ _ = delete "" [ intercalate "_" w | w <- p]
 mainWhile p (a : w) alphabet_a transitions_a = mainWhile mod_p mod_w alphabet_a transitions_a
   where
     (mod_p, mod_w) = foreachLetterAlphabet p w a alphabet_a transitions_a
 
 -------------------------------------------------------------
 
-isSubset :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
-isSubset a b = all (`elem` b) a
+isSubset1 :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
+isSubset1 a b = all (`elem` b) a
 
-createNewTransitions :: [[Char]] -> [Transition] -> [Transition]
-createNewTransitions states_s transitions_t = nub [ Transition src_state symbol_t dst_state | tr <- transitions_t, source_t <- [source tr],
-        symbol_t <- [symbol tr], destination_t <- [destination tr], src_state <- states_s, src_s <- src_state, [src_s] == source_t,
-        dst_state <- states_s, dst_s <- dst_state, [dst_s] == destination_t] --todo elem working only with string
+getStateNames :: [[Char]] -> [[Char]] -> [[Char]]
+getStateNames old new = [ createStartState new state | state <- old]
 
-createFinalStates :: (Foldable t1, Foldable t2, Eq a, Eq (t2 a)) => [t1 a] -> [t2 a] -> [t2 a]
-createFinalStates accept_s states_s = nub [ state | state <- states_s, acc_s <- accept_s, acc_s `isSubset` state]
+createFinalStates :: [[Char]] -> [[Char]] -> [[Char]]
+createFinalStates accept_s states_s = nub [ createStartState states_s state | state <- accept_s]
+
+createStartState :: [[Char]] -> [Char] -> [Char]
+createStartState states_s start_state_s = if start_state_s `elem` states_s then start_state_s
+  else concat new_start_s
+  where
+    new_start_s = [ state | state <- states_s, ("_"++start_state_s) `isSubset1` state || (start_state_s++"_") `isSubset1` state]
+
 
 -------------------------------------------------------------
- 
+
 renameStates :: Eq a1 => [a1] -> [a2] -> [a2]
 renameStates old new = [ new !! index | state <- old, state `elem` old, Just index <- [elemIndex state old]]
 
@@ -182,9 +152,9 @@ renameFinalStates :: Eq a1 => [a1] -> [a2] -> [a1] -> [a2]
 renameFinalStates states_s reamed_s accept_s = [ reamed_s !! index | state <- accept_s, Just index <- [elemIndex state states_s]]
 
 renameTransitions :: [State] -> [State] -> [Transition] -> [Transition]
-renameTransitions states_s renamed_s transitions_t = nub [ Transition (renamed_s !! index_src) symbol_t (renamed_s !! index_dst) | tr <- transitions_t, source_t <- [source tr],
-        symbol_t <- [symbol tr], destination_t <- [destination tr], source_t `elem` states_s, Just index_src <- [elemIndex source_t states_s],
-        destination_t `elem` states_s, Just index_dst <- [elemIndex destination_t states_s]]
+renameTransitions old new transitions_t = nub [ Transition (new !! index_src) symbol_t (new !! index_dst) | tr <- transitions_t, source_t <- [source tr],
+        symbol_t <- [symbol tr], destination_t <- [destination tr], source_t `elem` old, Just index_src <- [elemIndex source_t old],
+        destination_t `elem` old, Just index_dst <- [elemIndex destination_t old]]
 
 getStatesPositionsInTransition :: [Transition] -> [State]
 getStatesPositionsInTransition transitions_t = nub (concat [[src,dst] | tr <- transitions_t, src <- [source tr], dst <- [destination tr]])
@@ -224,20 +194,10 @@ minimalAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept
           where
             p = [accept_states_a, states_a \\ accept_states_a]
             new_states = mainWhile p p alphabet_a (sort transitions_a)
-            new_start_state = concat (createFinalStates [start_state_a] new_states)
-            new_transitions = createNewTransitions new_states (sort transitions_a)
+            new_start_state = createStartState new_states start_state_a
+            new_transitions = sort $ nub (renameTransitions states_a (getStateNames states_a new_states) transitions_a)
             new_accept_states = createFinalStates accept_states_a new_states
             (s, st, accept, tr) =  renameAutomaton new_states new_start_state new_accept_states new_transitions
-
-
---            r_states = renameStartInStates new_states new_start_state
---            r_tr_start_state = sort (renameTransitions new_states r_states new_transitions)
---            renamed_states = getNames r_tr_start_state
---            renamed_states = renameStates $ getNames r_tr_start_state
---            renamed_states = renameStates $ new_start_state : delete new_start_state new_states
---            renamed_tr = sort (renameTransitions r_states renamed_states r_tr_start_state)
---            renamed_fin = renameFinalStates r_states renamed_states new_accept_states
-
 
 --sortBy (\(a,_) (b,_) -> compare a b) [(2, "world"), (4, "!"), (1, "Hello")]
 --[(1,"Hello"),(2,"world"),(4,"!")]

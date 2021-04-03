@@ -29,14 +29,10 @@ main = do
   is_valid <- validateParsedInput parsed_input
   if is_valid
   then do
-    let automaton = sortItemsInAutomaton (fst (head parsed_input))
---    let all_tr = allTransitions (states automaton) (alphabet automaton)
---    let exist_tr = existingTransitions (transitions automaton)
---    let missing_tr = missingTransitions all_tr exist_tr
---    print missing_tr
-
-
-    action $ minimalAutomaton (removeUnusedStates $ createSinkState automaton)
+    action $ sortItemsInAutomaton (fst (head parsed_input))
+    
+--    let automaton = sortItemsInAutomaton (fst (head parsed_input))
+--    action automaton
 
 
 --    print "------RM------"
@@ -47,11 +43,12 @@ main = do
 --    print a
 --
 --    let p = [accept_states automat, states automat \\ accept_states automat]
---    let new_states = mainWhile p p (alphabet automat) (transitions automat)
+----    let new_states = sortStates (mainWhile p p (alphabet automat) (transitions automat))
+--    let new_states =  mainWhile p p (alphabet automat) (transitions automat)
 --    print "----- New st ------"
 --    print new_states
 --
---    let new_start_state = concat (createFinalStates [start_state automat] new_states)
+--    let new_start_state = createStartState new_states (start_state automat)
 --    print "----- New start st ------"
 --    print new_start_state
 --
@@ -59,14 +56,17 @@ main = do
 ----    print "----- Renamed st ------"
 ----    print renamed_states
 ----
---    let new_transitions = createNewTransitions new_states (transitions automat)
+----    let new_transitions = createNewTransitions new_states (transitions automat)
+--    let nnn_state_names = getStateNames (states automat) new_states
+--    let new_transitions = nub (renameTransitions (states automat) nnn_state_names (transitions automat))
 --    print "----- New tr ------"
+--    print (length new_transitions)
 --    print new_transitions
 --
 ----    let renamed_tr = renameTransitions new_states renamed_states new_transitions
 ----    print "----- Renamed tr ------"
 ----    print renamed_tr
-----
+--
 --    let new_accept_states = createFinalStates (accept_states automat) new_states
 --    print "----- New accept ------"
 --    print new_accept_states
@@ -117,34 +117,8 @@ main = do
 --    let y = doSomething start [["2","3","4","5"]] ["3", "4"] ["2","3","4","5"]
 --    print y
 
-
-
-
-
-
   else
     exitWithError InvalidAutomatonFormat 2
-
-
---  if parsed_input == []
---  then exitWithError Invalid_file_format 10
---  else do
---    let automaton = (fst (head parsed_input))
---    let is_valid = validateAutomatonA automaton
-----    let is_valid = validateAutomatonA ini
-----    putStrLn "--------TYPES----------"
-----    print (dynTypeRep (toDyn parsed_input))
-----    print (dynTypeRep (toDyn automaton))
-----    print (dynTypeRep (toDyn is_valid))
-----    putStrLn "--------AUTOMATON----------"
-----    print automaton
-----    putStrLn "--------VALID----------"
-----    print is_valid
---    if is_valid
---    then
---        action $ automaton
---    else
---      exitWithError Invalid_automaton_format 2
 
 
 validateParsedInput :: [(FiniteAutomaton, b)] -> IO Bool
@@ -155,12 +129,19 @@ validateParsedInput parsed_input = return (validateAutomatonA (sortItemsInAutoma
 parseArgs :: [Char] -> b -> IO (FiniteAutomaton -> IO (), b)
 parseArgs arguments input = case arguments of
   "-i" -> return (printFiniteAutomaton, input)
-  "-t" -> return (printFiniteAutomaton, input)
+  "-t" -> return (printMinimalFiniteAutomaton, input)
+  "-m" -> return (printWellDefinedFiniteAutomaton, input)
   _ -> exitWithError InvalidArguments 10
 
 
 printFiniteAutomaton :: FiniteAutomaton -> IO ()
 printFiniteAutomaton = putStr . show
+
+printMinimalFiniteAutomaton :: FiniteAutomaton -> IO ()
+printMinimalFiniteAutomaton automaton = printFiniteAutomaton $ minimalAutomaton (removeUnusedStates $ createSinkState automaton)
+
+printWellDefinedFiniteAutomaton :: FiniteAutomaton -> IO ()
+printWellDefinedFiniteAutomaton automaton = printFiniteAutomaton (removeUnusedStates $ createSinkState automaton)
 
 
 -- Prints the context-free grammar to the standard output after the 'simplify1'
