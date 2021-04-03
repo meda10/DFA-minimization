@@ -32,9 +32,6 @@ main = do
     action $ sortItemsInAutomaton (fst (head parsed_input))
     
 --    let automaton = sortItemsInAutomaton (fst (head parsed_input))
---    action automaton
-
-
 --    print "------RM------"
 --    let automat = removeUnusedStates $ createSinkState automaton
 --    print automat
@@ -69,6 +66,8 @@ main = do
 --
 --    let new_accept_states = createFinalStates (accept_states automat) new_states
 --    print "----- New accept ------"
+----    print new_states
+----    print (accept_states automat)
 --    print new_accept_states
 --
 ----    let renamed_fin = renameFinalStates new_states renamed_states new_accept_states
@@ -76,11 +75,11 @@ main = do
 ----    print renamed_fin
 --
 --    print "----- Rename From To ------"
---    let xxx_new = renameStartStateInStates new_states new_start_state
+--    let renamed_start_state = renameStartStateInStates new_states new_start_state
 --    print new_states
---    print xxx_new
+--    print renamed_start_state
 --    print "----- Rename Done ------"
---    let (s, st, fin, tr) = renameAll new_states xxx_new new_start_state new_accept_states new_transitions
+--    let (s, st, fin, tr) = renameAll new_states renamed_start_state new_start_state new_accept_states new_transitions
 --    print (s, st, fin, tr)
 --
 --    print "----- Rename From To ------"
@@ -133,7 +132,6 @@ parseArgs arguments input = case arguments of
   "-m" -> return (printWellDefinedFiniteAutomaton, input)
   _ -> exitWithError InvalidArguments 10
 
-
 printFiniteAutomaton :: FiniteAutomaton -> IO ()
 printFiniteAutomaton = putStr . show
 
@@ -142,17 +140,6 @@ printMinimalFiniteAutomaton automaton = printFiniteAutomaton $ minimalAutomaton 
 
 printWellDefinedFiniteAutomaton :: FiniteAutomaton -> IO ()
 printWellDefinedFiniteAutomaton automaton = printFiniteAutomaton (removeUnusedStates $ createSinkState automaton)
-
-
--- Prints the context-free grammar to the standard output after the 'simplify1'
--- function has been performed.
---printCFGSimplify1 :: CFG -> IO ()
---printCFGSimplify1 = printCFG . simplify1
-
-
--- Terminates the program with an error code and an error message.
---undefined_option :: String -> IO a
---undefined_option str = hPutStrLn stderr str >> exitFailure
 
 exitWithError :: Show a => a -> Int -> IO b
 exitWithError error_msg code = hPutStrLn stderr ("ERROR: " ++ show error_msg) >> exitWith (ExitFailure code)

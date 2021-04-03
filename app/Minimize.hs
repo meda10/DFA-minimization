@@ -127,9 +127,6 @@ mainWhile p (a : w) alphabet_a transitions_a = mainWhile mod_p mod_w alphabet_a 
 
 -------------------------------------------------------------
 
-isSubset1 :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
-isSubset1 a b = all (`elem` b) a
-
 getStateNames :: [[Char]] -> [[Char]] -> [[Char]]
 getStateNames old new = [ createStartState new state | state <- old]
 
@@ -140,8 +137,7 @@ createStartState :: [[Char]] -> [Char] -> [Char]
 createStartState states_s start_state_s = if start_state_s `elem` states_s then start_state_s
   else concat new_start_s
   where
-    new_start_s = [ state | state <- states_s, ("_"++start_state_s) `isSubset1` state || (start_state_s++"_") `isSubset1` state]
-
+    new_start_s = [ state | state <- states_s, ("_"++start_state_s++"_") `isInfixOf` state || (start_state_s++"_") `isPrefixOf` state || ("_"++start_state_s) `isSuffixOf` state]
 
 -------------------------------------------------------------
 
