@@ -1,3 +1,7 @@
+--  Project: FLP - Functional - DKA-MKA
+--  Author: Petr Medek 
+--  Year: 2021
+
 module Types where
 
 import Data.List (intercalate)

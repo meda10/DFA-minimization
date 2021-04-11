@@ -1,3 +1,7 @@
+--  Project: FLP - Functional - DKA-MKA
+--  Author: Petr Medek 
+--  Year: 2021
+
 module Parse where
 
 import Text.ParserCombinators.ReadP
@@ -7,7 +11,7 @@ import Data.List
 parse :: String -> [(FiniteAutomaton, String)]
 parse = readP_to_S parseFiniteAutomaton
 
-
+--Sort alphabet and states in automaton 
 sortItemsInAutomaton :: FiniteAutomaton -> FiniteAutomaton
 sortItemsInAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
   fin_a { states = sort states_a,
@@ -16,11 +20,7 @@ sortItemsInAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a ac
                    accept_states = sort accept_states_a,
                    transitions = sort transitions_a}
 
---parse = readP_to_S parse_FiniteAutomaton
---parse = readP_to_S parse_FiniteAutomaton "1,2,3,4,5,6,11\nab\n1\n1,6\n1,a,6\n1,b,2\n2,a,5"
---parse = fst . minimumBy (comparing snd) . readP_to_S parse_FiniteAutomaton
---parse = last . readP_to_S parse_FiniteAutomaton
-
+--Parse automaton 
 parseFiniteAutomaton :: ReadP FiniteAutomaton
 parseFiniteAutomaton = FiniteAutomaton
   <$> statesParser <* eol
@@ -37,6 +37,7 @@ separator = char ','
 
 -------------------------------------------------------------
 
+--Parse states 
 statesParser :: ReadP [[Char]]
 statesParser = sepBy stateParse separator
 
@@ -48,6 +49,7 @@ stateParse = many1 (satisfy isStateSymbols)
 
 -------------------------------------------------------------
 
+--Parse Alphabet 
 alphabetParser :: ReadP [Char]
 alphabetParser = many alphabetSymbolParse -- todo many/many1
 
@@ -59,16 +61,19 @@ alphabetSymbolParse = satisfy isAlphabetSymbol
 
 -------------------------------------------------------------
 
+--Parse Start state 
 startStateParser :: ReadP [Char]
 startStateParser = stateParse
 
 -------------------------------------------------------------
 
+--Parse accept states 
 acceptStatesParser :: ReadP [[Char]]
 acceptStatesParser = statesParser
 
 -------------------------------------------------------------
 
+--Parse transitions 
 transitionsParser :: ReadP [Transition]
 transitionsParser = sepBy transitionParser skipSpaces
 
@@ -97,6 +102,7 @@ validateTransition transition automaton_a =
     elem state_b (states automaton_a)
       where (state_a,sym,state_b) = (source transition, symbol transition, destination transition)
 
+--Check if automaton is valid
 validateAutomatonA :: FiniteAutomaton -> Bool
 validateAutomatonA automaton_a@(FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
   is_valid
