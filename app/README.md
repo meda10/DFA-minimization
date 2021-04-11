@@ -26,3 +26,8 @@ automaton. Result is printed to STDOUT. Program contains following source files
   If it does, it will consider it as invalid and returns error message
 * If automaton doesn't have any transitions, program expects one empty line (`\r` or `\r\n` or `\n`)
   were transitions should be defined, or it will return error message.
+
+## Tests
+Directory test contains test files for `dka-2-mka`, tests are written for option `-t` 
+* `in` - input files 
+* `valid` - expected output files

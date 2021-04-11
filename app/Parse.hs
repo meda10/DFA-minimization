@@ -4,9 +4,11 @@
 
 module Parse where
 
-import Text.ParserCombinators.ReadP
+import Text.ParserCombinators.ReadP (string, ReadP, readP_to_S, char, (<++), eof, sepBy, many1, many, satisfy, skipSpaces)
+import Data.List (sort)
+import Control.Applicative ((<*>), (<$>), (<*), (*>))
+
 import Types
-import Data.List
 
 parse :: String -> [(FiniteAutomaton, String)]
 parse = readP_to_S parseFiniteAutomaton
@@ -29,9 +31,11 @@ parseFiniteAutomaton = FiniteAutomaton
   <*> acceptStatesParser <* eol
   <*> transitionsParser <* eof
 
+--End of line 
 eol :: ReadP String
 eol = string "\r" <++ string "\r\n" <++ string "\n" <++ string "\r"
 
+--States separator
 separator :: ReadP Char
 separator = char ','
 
@@ -41,8 +45,9 @@ separator = char ','
 statesParser :: ReadP [[Char]]
 statesParser = sepBy stateParse separator
 
+--Checks if character valid State (contains only 0-9)
 isStateSymbols :: Char -> Bool
-isStateSymbols  character = character `elem` "0123456789"
+isStateSymbols character = character `elem` "0123456789"
 
 stateParse :: ReadP [Char]
 stateParse = many1 (satisfy isStateSymbols)
@@ -53,6 +58,7 @@ stateParse = many1 (satisfy isStateSymbols)
 alphabetParser :: ReadP [Char]
 alphabetParser = many alphabetSymbolParse -- todo many/many1
 
+--Checks if character is symbol of alphabet
 isAlphabetSymbol :: Char -> Bool
 isAlphabetSymbol character = character `elem` "abcdefghijklmnopqrstuvwxyz"
 
@@ -85,16 +91,22 @@ transitionParser = Transition
 
 -------------------------------------------------------------
 
+--Checks if all elements are unique
 allUniqueElements :: (Eq a) => [a] -> Bool
 allUniqueElements [] = True
 allUniqueElements (x:xs) = notElem x xs && allUniqueElements xs
 
-isSubset :: (Foldable t1, Foldable t2, Eq a) => t1 a -> t2 a -> Bool
-isSubset a b = all (`elem` b) a
+-- Checks if a is subset of b
+isSubset :: Eq a => [a] -> [a] -> Bool
+isSubset [] _ = False
+isSubset _ [] = False
+isSubset a b = all (\x -> elem x b) a
 
+--Validates transitions
 validateTransitions :: FiniteAutomaton -> Bool
 validateTransitions automaton_a = all (`validateTransition` automaton_a) (transitions automaton_a)
 
+--Checks if transition source and destination are in states and if symbol is in alphabet
 validateTransition :: Transition -> FiniteAutomaton -> Bool
 validateTransition transition automaton_a =
     elem state_a (states automaton_a) &&

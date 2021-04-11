@@ -97,9 +97,12 @@ nonEmptyDifference [] _ = False
 nonEmptyDifference _ [] = False
 nonEmptyDifference a b = (a \\ b) /= []
 
-transitionLeadsTo :: Foldable t => Symbol -> t State -> [Transition] -> [State]
+--transitionLeadsTo :: Foldable t => Symbol -> t State -> [Transition] -> [State]
+transitionLeadsTo :: Symbol -> [State] -> [Transition] -> [State]
+transitionLeadsTo _ [] _ = []
 transitionLeadsTo _ _ [] = []
-transitionLeadsTo sym dst transitions_t = [ source_t | tr <- transitions_t, source_t <- [source tr], destination_t <- [destination tr] , symbol_t <- [symbol tr], destination_t `elem` dst && symbol_t == sym]
+transitionLeadsTo sym dst transitions_t = [ source_t | tr <- transitions_t, source_t <- [source tr], 
+    destination_t <- [destination tr] , symbol_t <- [symbol tr], destination_t `elem` dst && symbol_t == sym]
 
 ---------------------------------------
 --Implementation of Hopcroft's algorithm
@@ -127,7 +130,9 @@ forEachXY p w x (y: y_tail) = forEachXY mod_p mod_w x y_tail
   where
     (mod_p, mod_w) = if nonEmptyDifference y x && nonEmptyIntersect x y then hopcroftsAlgorithmBody p w x y else (p, w)
 
-foreachLetterAlphabet :: Foldable t => [[State]] -> [[State]] -> t State -> [Symbol] -> [Transition] -> ([[State]], [[State]])
+foreachLetterAlphabet :: [[State]] -> [[State]] -> [State] -> [Symbol] -> [Transition] -> ([[State]], [[State]])
+foreachLetterAlphabet p w [] _ _ = (p, w)
+foreachLetterAlphabet p w _ _ [] = (p, w)
 foreachLetterAlphabet p w _ [] _ = (p, w)
 foreachLetterAlphabet p w a (alphabet_head : alphabet_tail) transitions_a = foreachLetterAlphabet mod_p mod_w a alphabet_tail transitions_a
   where
