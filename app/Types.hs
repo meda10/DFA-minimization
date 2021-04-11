@@ -6,18 +6,26 @@ module Types where
 
 import Data.List (intercalate)
 
+-- Finite automaton - state
 type State = String
+
+-- Finite automaton - alphabet symbol
 type Symbol = Char
 
+-- Finite automaton - states (list of states)
 type States = [State]
+
+-- Finite automaton - alphabet (list of symbols)
 type Alphabet = [Symbol]
 
+-- Finite automaton - transition (source state, destination state, symbol)
 data Transition = Transition {
   source :: State,
   symbol :: Symbol,
   destination :: State
 } deriving (Eq, Ord)
 
+-- Finite automaton (states, alphabet, accept states, list of transitions)
 data FiniteAutomaton = FiniteAutomaton {
   states :: States,
   alphabet :: Alphabet,
@@ -26,11 +34,13 @@ data FiniteAutomaton = FiniteAutomaton {
   transitions :: [Transition]
 } deriving (Eq)
 
+-- Defines how to print transition
 instance Show Transition where
   show (Transition source_t symbol_t destination_t) =
           source_t ++ "," ++ [symbol_t] ++ "," ++ destination_t
 --          "(" ++ source_t ++ "," ++ [symbol_t] ++ "," ++ destination_t ++ ")"
 
+-- Defines how to print finite automaton
 instance Show FiniteAutomaton where
   show (FiniteAutomaton states_a alphabet_a start_state_a accept_states_a transitions_a) =
           intercalate "," states_a ++ "\n" ++
@@ -39,6 +49,7 @@ instance Show FiniteAutomaton where
           intercalate ","  accept_states_a ++ "\n" ++
           intercalate "\n" (map show transitions_a)
 
+-- Defines Errors
 data AllErrors = InvalidFileFormat | InvalidArguments | InvalidAutomatonFormat
 
 instance Show AllErrors where

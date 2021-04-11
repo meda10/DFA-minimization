@@ -4,7 +4,7 @@
 
 module Minimize where
 
-import Data.List (nub, sort, intersect, intersect, insert, delete, intercalate, isInfixOf, isPrefixOf, isSuffixOf, elemIndex, (\\))
+import Data.List (nub, sort, intersect, insert, delete, intercalate, isInfixOf, isPrefixOf, isSuffixOf, elemIndex, (\\))
 import Types
 
 -------------------------------------------------------------
@@ -66,7 +66,7 @@ accessibleStates states_s old_states transitions_t =
         if states_s == old_states
         then states_s
         else do
-          let new_states = nub $ sort (states_s ++ [ q | tr <- transitions_t, st <- states_s, q <- [destination tr], source tr == st]) --todo check maybe `elem`
+          let new_states = nub $ sort (states_s ++ [q | tr <- transitions_t, st <- states_s, source tr == st, q <- [destination tr]]) --todo check maybe `elem`
           accessibleStates new_states states_s transitions_t
 
 --Remove unused states
@@ -75,7 +75,7 @@ removeUnusedStates fin_a@(FiniteAutomaton _ alphabet_a start_state_a accept_stat
         fin_a { states = new_states,
                 alphabet = alphabet_a,
                 start_state = start_state_a,
-                accept_states = intersect new_states accept_states_a,
+                accept_states = new_states `intersect` accept_states_a,
                 transitions = new_transitions}
           where
             new_states = accessibleStates [start_state_a] [] transitions_a
@@ -89,7 +89,7 @@ removeUnusedStates fin_a@(FiniteAutomaton _ alphabet_a start_state_a accept_stat
 nonEmptyIntersect :: Eq a => [a] -> [a] -> Bool
 nonEmptyIntersect [] _ = False
 nonEmptyIntersect _ [] = False
-nonEmptyIntersect a b = intersect a b /= []
+nonEmptyIntersect a b = a `intersect` b /= []
 
 --Difference of 2 list is not empty
 nonEmptyDifference :: Eq a => [a] -> [a] -> Bool
@@ -107,21 +107,18 @@ transitionLeadsTo sym dst transitions_t = [ source_t | tr <- transitions_t, sour
 ---------------------------------------
 
 hopcroftsAlgorithmBody :: Ord a => [[a]] -> [[a]] -> [a] -> [a] -> ([[a]], [[a]])
-hopcroftsAlgorithmBody p w x y =
-  if y `elem` w then
-    (new_p, new_w)
-  else
-    if length intersection <= length difference then
-      (new_p, w_add_intersection)
-    else
-      (new_p, w_add_difference)
-  where
-    intersection = intersect x y
-    difference = y \\ x
-    new_p = insert difference $ insert intersection $ delete y p
-    new_w = insert difference $ insert intersection $ delete y w
-    w_add_intersection = insert intersection w
-    w_add_difference = insert difference w
+hopcroftsAlgorithmBody p w x y
+    | y `elem` w = (new_p, new_w)
+    | length intersection <= length difference
+    = (new_p, w_add_intersection)
+    | otherwise = (new_p, w_add_difference)
+    where
+        intersection = x `intersect` y
+        difference = y \\ x
+        new_p = insert difference $ insert intersection $ delete y p
+        new_w = insert difference $ insert intersection $ delete y w
+        w_add_intersection = insert intersection w
+        w_add_difference = insert difference w
 
 
 forEachXY :: Ord a => [[a]] -> [[a]] -> [a] -> [[a]] -> ([[a]], [[a]])
@@ -174,9 +171,16 @@ renameFinalStates states_s reamed_s accept_s = [ reamed_s !! index | state <- ac
 
 --Rename transitions
 renameTransitions :: [State] -> [State] -> [Transition] -> [Transition]
-renameTransitions old new transitions_t = nub [ Transition (new !! index_src) symbol_t (new !! index_dst) | tr <- transitions_t, source_t <- [source tr],
-        symbol_t <- [symbol tr], destination_t <- [destination tr], source_t `elem` old, Just index_src <- [elemIndex source_t old],
-        destination_t `elem` old, Just index_dst <- [elemIndex destination_t old]]
+renameTransitions old new transitions_t = nub [Transition (new !! index_src) symbol_t (new !! index_dst) |
+                                                   tr <- transitions_t,
+                                                   source_t <- [source tr],
+                                                   source_t `elem` old,
+                                                   symbol_t <- [symbol tr],
+                                                   destination_t <- [destination tr],
+                                                   destination_t `elem` old,
+                                                   Just index_src <- [elemIndex source_t old],
+                                                   Just index_dst <- [elemIndex destination_t old]]
+
 
 --Get list of positions -> so transition destination is equal or less than source or it is +1
 getStatesPositionsInTransition :: [Transition] -> [State]
