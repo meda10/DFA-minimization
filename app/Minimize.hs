@@ -224,4 +224,3 @@ minimalAutomaton fin_a@(FiniteAutomaton states_a alphabet_a start_state_a accept
             new_transitions = sort $ nub (renameTransitions states_a (getStateNames states_a new_states) transitions_a)
             new_accept_states = createFinalStates accept_states_a new_states
             (s, st, accept, tr) =  renameAutomaton new_states new_start_state new_accept_states new_transitions
-
